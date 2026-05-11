@@ -321,12 +321,41 @@
 </div>
 
 <script>
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyVGPxxGD5javToJf3vpQeK_Lrd1xLW2-krfv0VCRuY6sx11dot2qparjVwy6_BW2I/exec';
+
   const MONTHS_ZH = ['一月','二月','三月','四月','五月','六月',
                      '七月','八月','九月','十月','十一月','十二月'];
 
   function mondayFirst(dow) { return (dow + 6) % 7; }
   function pad(n) { return String(n).padStart(2,'0'); }
 
+  async function callApi(action, data = {}) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action, ...data })
+  });
+  return res.json();
+}
+  async function render() {
+  document.getElementById('monthTitle').innerHTML =
+    `<small>${year}</small>${MONTHS_ZH[month]}`;
+  
+  // 從 GAS 拿當月有空檔的日期
+  const prefix = `${year}-${pad(month+1)}`;
+  const res = await callApi('getMonthSchedules', {
+    year: year,
+    month: month + 1
+  });
+  
+  // 再拿當月所有預約
+  const bookings = await callApi('getBookingsByMonth', {
+    year: year,
+    month: month + 1
+  });
+
+  renderCalendar(res.data || [], bookings.data || []);
+}
   const mockSlots = {
     '2026-05-01': [
       { start:'9:00',  end:'10:00', available:true  },
