@@ -348,32 +348,34 @@ function changeMonth(dir) {
   render();
 }
 
+const cache = {};
+
 async function render() {
   document.getElementById('monthTitle').innerHTML =
     `<small>${year}</small>${MONTHS_ZH[month]}`;
 
-  // loading 狀態
-  document.getElementById('daysGrid').innerHTML =
-    '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#9A8E82;font-size:13px">載入中…</div>';
+  const key = `${year}-${month}`;
+
+  // 有快取先顯示
+  if (cache[key]) {
+    renderCalendar(cache[key].schedules, cache[key].bookings);
+  } else {
+    document.getElementById('daysGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#9A8E82;font-size:13px">載入中…</div>';
+  }
 
   try {
-    // 取得當月空檔
-    const schedRes = await callApi('getMonthSchedules', {
-      year: year,
+    const res = await callApi('getCalendarData', {
+      year:  year,
       month: month + 1
     });
-
-    // 取得當月預約
-    const bookRes = await callApi('getBookingsByMonth', {
-      year: year,
-      month: month + 1
-    });
-
-    renderCalendar(schedRes.data || [], bookRes.data || []);
-
+    cache[key] = { schedules: res.schedules || [], bookings: res.bookings || [] };
+    renderCalendar(cache[key].schedules, cache[key].bookings);
   } catch(err) {
-    document.getElementById('daysGrid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#C0392B;font-size:13px">載入失敗，請重新整理</div>';
+    if (!cache[key]) {
+      document.getElementById('daysGrid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#C0392B;font-size:13px">載入失敗，請重新整理</div>';
+    }
     console.error(err);
   }
 }
