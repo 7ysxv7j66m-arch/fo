@@ -323,13 +323,13 @@
 <script>
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyVGPxxGD5javToJf3vpQeK_Lrd1xLW2-krfv0VCRuY6sx11dot2qparjVwy6_BW2I/exec';
 
-  const MONTHS_ZH = ['一月','二月','三月','四月','五月','六月',
-                     '七月','八月','九月','十月','十一月','十二月'];
+const MONTHS_ZH = ['一月','二月','三月','四月','五月','六月',
+                   '七月','八月','九月','十月','十一月','十二月'];
 
-  function mondayFirst(dow) { return (dow + 6) % 7; }
-  function pad(n) { return String(n).padStart(2,'0'); }
+function mondayFirst(dow) { return (dow + 6) % 7; }
+function pad(n) { return String(n).padStart(2,'0'); }
 
-  async function callApi(action, data = {}) {
+async function callApi(action, data = {}) {
   const res = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -337,182 +337,169 @@
   });
   return res.json();
 }
-  async function render() {
+
+let year = new Date().getFullYear();
+let month = new Date().getMonth(); // 0-indexed
+
+function changeMonth(dir) {
+  month += dir;
+  if (month > 11) { month = 0; year++; }
+  if (month < 0)  { month = 11; year--; }
+  render();
+}
+
+async function render() {
   document.getElementById('monthTitle').innerHTML =
     `<small>${year}</small>${MONTHS_ZH[month]}`;
-  
-  // 從 GAS 拿當月有空檔的日期
-  const prefix = `${year}-${pad(month+1)}`;
-  const res = await callApi('getMonthSchedules', {
-    year: year,
-    month: month + 1
-  });
-  
-  // 再拿當月所有預約
-  const bookings = await callApi('getBookingsByMonth', {
-    year: year,
-    month: month + 1
-  });
 
-  renderCalendar(res.data || [], bookings.data || []);
+  // loading 狀態
+  document.getElementById('daysGrid').innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#9A8E82;font-size:13px">載入中…</div>';
+
+  try {
+    // 取得當月空檔
+    const schedRes = await callApi('getMonthSchedules', {
+      year: year,
+      month: month + 1
+    });
+
+    // 取得當月預約
+    const bookRes = await callApi('getBookingsByMonth', {
+      year: year,
+      month: month + 1
+    });
+
+    renderCalendar(schedRes.data || [], bookRes.data || []);
+
+  } catch(err) {
+    document.getElementById('daysGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#C0392B;font-size:13px">載入失敗，請重新整理</div>';
+    console.error(err);
+  }
 }
-  const mockSlots = {
-    '2026-05-01': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-04': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:false },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-05': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-    ],
-    '2026-05-06': [
-      { start:'9:00',  end:'10:30', available:false },
-      { start:'14:00', end:'15:30', available:true  },
-    ],
-    '2026-05-07': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-11': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-12': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:false },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-13': [
-      { start:'10:00', end:'11:30', available:true  },
-      { start:'15:00', end:'16:30', available:true  },
-    ],
-    '2026-05-14': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-18': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:false },
-    ],
-    '2026-05-19': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-20': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-21': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-    ],
-    '2026-05-22': [
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-25': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-26': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:false },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-27': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-    ],
-    '2026-05-28': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'13:00', end:'14:30', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-    '2026-05-29': [
-      { start:'9:00',  end:'10:00', available:true  },
-      { start:'17:00', end:'18:30', available:true  },
-    ],
-  };
 
-  // 休假日：不顯示任何內容，空格就好
-  const restDays = new Set(['2026-05-02','2026-05-09','2026-05-16','2026-05-23','2026-05-30']);
+function renderCalendar(schedules, bookings) {
+  const firstDay    = new Date(year, month, 1).getDay();
+  const offset      = mondayFirst(firstDay);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today       = new Date();
+  const todayStr    = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const grid        = document.getElementById('daysGrid');
+  grid.innerHTML    = '';
 
-  let year = 2026, month = 4;
+  // 把空檔和預約整理成以日期為 key 的 map
+  const scheduleMap = {};
+  schedules.forEach(s => {
+    if (!scheduleMap[s.date]) scheduleMap[s.date] = [];
+    scheduleMap[s.date].push(s);
+  });
 
-  function changeMonth(dir) {
-    month += dir;
-    if (month > 11) { month = 0; year++; }
-    if (month < 0)  { month = 11; year--; }
-    render();
+  const bookingMap = {};
+  bookings.forEach(b => {
+    if (!bookingMap[b.date]) bookingMap[b.date] = [];
+    bookingMap[b.date].push(b);
+  });
+
+  // 空格
+  for (let i = 0; i < offset; i++) {
+    const el = document.createElement('div');
+    el.className = 'day-cell empty';
+    el.innerHTML = '<div class="day-num"></div>';
+    grid.appendChild(el);
   }
 
-  function render() {
-    document.getElementById('monthTitle').innerHTML =
-      `<small>${year}</small>${MONTHS_ZH[month]}`;
-    renderCalendar();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds      = `${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday = ds === todayStr;
+    const isPast  = ds < todayStr;
+
+    // 當天的空檔區間
+    const daySchedules = (!isPast && scheduleMap[ds]) ? scheduleMap[ds] : [];
+    // 當天的預約
+    const dayBookings  = bookingMap[ds] || [];
+
+    // 計算可顯示的時段（空檔扣掉預約）
+    const slots = getAvailableSlots(daySchedules, dayBookings);
+    const hasSlot = slots.some(s => s.available);
+
+    let cls = 'day-cell';
+    if (isPast)        cls += ' no-slot';
+    else if (isToday)  cls += ' today';
+    else if (hasSlot)  cls += ' has-slot';
+    else               cls += ' no-slot';
+
+    const numHtml  = `<div class="day-num">${d}</div>`;
+    const slotsHtml = slots.length
+      ? `<div class="slot-list">` +
+        slots.map(s =>
+          `<div class="slot-tag ${s.available ? '' : 'booked'}">${s.start}–${s.end}</div>`
+        ).join('') +
+        `</div>`
+      : '';
+
+    const el = document.createElement('div');
+    el.className = cls;
+    el.innerHTML = numHtml + slotsHtml;
+    grid.appendChild(el);
   }
+}
 
-  function renderCalendar() {
-    const firstDay    = new Date(year, month, 1).getDay();
-    const offset      = mondayFirst(firstDay);
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today       = new Date();
-    const todayStr    = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-    const grid        = document.getElementById('daysGrid');
-    grid.innerHTML    = '';
+// 把空檔區間切割掉已預約時段，產生顯示用的 slots
+function getAvailableSlots(schedules, bookings) {
+  if (schedules.length === 0) return [];
 
-    // 空格
-    for (let i = 0; i < offset; i++) {
-      const el = document.createElement('div');
-      el.className = 'day-cell empty';
-      el.innerHTML = '<div class="day-num"></div>';
-      grid.appendChild(el);
+  const result = [];
+
+  schedules.forEach(sch => {
+    const schStart = timeToMin(sch.start_time);
+    const schEnd   = timeToMin(sch.end_time);
+
+    const dayBookings = bookings
+      .filter(b => b.status !== '取消')
+      .filter(b => {
+        const bStart = timeToMin(b.start_time);
+        const bEnd   = timeToMin(b.end_time);
+        return bStart < schEnd && bEnd > schStart;
+      })
+      .sort((a,b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+
+    if (dayBookings.length === 0) {
+      result.push({ start: sch.start_time, end: sch.end_time, available: true });
+      return;
     }
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds      = `${year}-${pad(month+1)}-${pad(d)}`;
-      const isToday = ds === todayStr;
-      const isPast  = ds < todayStr;
-      const isRest  = restDays.has(ds);
-      const slots   = (!isRest && !isPast) ? (mockSlots[ds] || []) : [];
-      const hasSlot = slots.some(s => s.available);
+    let cursor = schStart;
+    dayBookings.forEach(b => {
+      const bStart = timeToMin(b.start_time);
+      const bEnd   = timeToMin(b.end_time);
+      if (bStart > cursor) {
+        result.push({ start: minToTime(cursor), end: minToTime(bStart), available: true });
+      }
+      result.push({ start: b.start_time, end: b.end_time, available: false });
+      cursor = bEnd;
+    });
 
-      let cls = 'day-cell';
-      if (isPast || isRest)  cls += ' no-slot';
-      else if (isToday)      cls += ' today';
-      else if (hasSlot)      cls += ' has-slot';
-      else                   cls += ' no-slot';
-
-      const numHtml = `<div class="day-num">${d}</div>`;
-
-      const slotsHtml = slots.length
-        ? `<div class="slot-list">` +
-          slots.map(s =>
-            `<div class="slot-tag ${s.available ? '' : 'booked'}">${s.start}–${s.end}</div>`
-          ).join('') +
-          `</div>`
-        : '';
-
-      const el = document.createElement('div');
-      el.className = cls;
-      el.innerHTML = numHtml + slotsHtml;
-      grid.appendChild(el);
+    if (cursor < schEnd) {
+      result.push({ start: minToTime(cursor), end: minToTime(schEnd), available: true });
     }
-  }
+  });
 
-  render();
+  return result;
+}
+
+function timeToMin(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minToTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}:${String(m).padStart(2,'0')}`;
+}
+
+// 初始化
+render();
 </script>
 </body>
 </html>
