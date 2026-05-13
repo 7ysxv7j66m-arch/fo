@@ -356,30 +356,26 @@ async function render() {
 
   const key = `${year}-${month}`;
 
-  // 有快取先顯示
+  // 先顯示骨架（讓用戶立刻看到月曆框架）
   if (cache[key]) {
     renderCalendar(cache[key].schedules, cache[key].bookings);
-  } else {
-    document.getElementById('daysGrid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#9A8E82;font-size:13px">載入中…</div>';
+    return; // 有快取直接顯示，不需要再打 API
   }
 
+  showSkeleton(); // 先畫出日期格子
+
   try {
-    const res = await callApi('getCalendarData', {
-      year:  year,
-      month: month + 1
-    });
+    const res = await callApi('getCalendarData', { year, month: month + 1 });
     cache[key] = { schedules: res.schedules || [], bookings: res.bookings || [] };
     renderCalendar(cache[key].schedules, cache[key].bookings);
+    prefetchNextMonth(); // 預載下個月
   } catch(err) {
-    if (!cache[key]) {
-      document.getElementById('daysGrid').innerHTML =
-        '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#C0392B;font-size:13px">載入失敗，請重新整理</div>';
-    }
+    document.getElementById('daysGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#C0392B;font-size:13px">載入失敗，請重新整理</div>';
     console.error(err);
   }
 }
-
+  
 function renderCalendar(schedules, bookings) {
   const firstDay    = new Date(year, month, 1).getDay();
   const offset      = mondayFirst(firstDay);
