@@ -6,6 +6,10 @@
 <title>預約行事曆</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  @keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.8; }
+}
   :root {
     --bg: #F5F3EE;
     --surface: #FDFCF9;
@@ -375,7 +379,41 @@ async function render() {
     console.error(err);
   }
 }
-  
+
+function prefetchNextMonth() {
+  let ny = year, nm = month + 1;
+  if (nm > 11) { nm = 0; ny++; }
+  const key = `${ny}-${nm}`;
+  if (cache[key]) return; // 已有快取不重複打
+  callApi('getCalendarData', { year: ny, month: nm + 1 })
+    .then(res => {
+      cache[key] = { schedules: res.schedules || [], bookings: res.bookings || [] };
+    });
+}
+function showSkeleton() {
+  const firstDay    = new Date(year, month, 1).getDay();
+  const offset      = mondayFirst(firstDay);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const grid        = document.getElementById('daysGrid');
+  grid.innerHTML    = '';
+
+  for (let i = 0; i < offset; i++) {
+    const el = document.createElement('div');
+    el.className = 'day-cell empty';
+    el.innerHTML = '<div class="day-num"></div>';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div');
+    el.className = 'day-cell no-slot';
+    el.innerHTML = `
+      <div class="day-num" style="color:#C8C0B6">${d}</div>
+      <div style="height:8px;background:#E8E4DF;border-radius:3px;margin-top:4px;animation:pulse 1.2s ease infinite"></div>
+    `;
+    grid.appendChild(el);
+  }
+}
 function renderCalendar(schedules, bookings) {
   const firstDay    = new Date(year, month, 1).getDay();
   const offset      = mondayFirst(firstDay);
