@@ -334,10 +334,15 @@ function mondayFirst(dow) { return (dow + 6) % 7; }
 function pad(n) { return String(n).padStart(2,'0'); }
 
 async function callApi(action, data = {}) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action, ...data })
+  const params = new URLSearchParams({
+    action,
+    ...Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, String(v)])
+    )
+  });
+  const res = await fetch(`${GAS_URL}?${params.toString()}`, {
+    method: 'GET',
+    redirect: 'follow'
   });
   return res.json();
 }
