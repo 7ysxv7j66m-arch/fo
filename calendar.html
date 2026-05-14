@@ -507,41 +507,56 @@ function renderCalendar(schedules, bookings) {
 
 // 把空檔區間切割掉已預約時段，產生顯示用的 slots
 function getAvailableSlots(schedules, bookings) {
-  if (schedules.length === 0) return [];
-
   const result = [];
 
-  schedules.forEach(sch => {
-    const schStart = timeToMin(sch.start_time);
-    const schEnd   = timeToMin(sch.end_time);
+  schedules.forEach(schedule => {
+    // 用 !== undefined 而不是 !value，避免 00:00 被跳過
+    const startStr = schedule.start_time;
+    const endStr   = schedule.end_time;
+    if (startStr === undefined || startStr === null || startStr === '') return;
 
-    const dayBookings = bookings
-      .filter(b => b.status !== '取消')
-      .filter(b => {
-        const bStart = timeToMin(b.start_time);
-        const bEnd   = timeToMin(b.end_time);
-        return bStart < schEnd && bEnd > schStart;
-      })
-      .sort((a,b) => timeToMin(a.start_time) - timeToMin(b.start_time));
+    const scheduleStart = timeToMinutes(startStr);
+    const scheduleEnd   = timeToMinutes(endStr);
 
-    if (dayBookings.length === 0) {
-      result.push({ start: sch.start_time, end: sch.end_time, available: true });
+    const overlapping = bookings.filter(b => {
+      const bStart = timeToMinutes(b.start_time);
+      const bEnd   = timeToMinutes(b.end_time);
+      return bStart < scheduleEnd && bEnd > scheduleStart;
+    });
+
+    if (overlapping.length === 0) {
+      result.push({ start: startStr, end: endStr, available: true });
       return;
     }
 
-    let cursor = schStart;
-    dayBookings.forEach(b => {
-      const bStart = timeToMin(b.start_time);
-      const bEnd   = timeToMin(b.end_time);
+    overlapping.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+
+    let cursor = scheduleStart;
+    overlapping.forEach(booking => {
+      const bStart = timeToMinutes(booking.start_time);
+      const bEnd   = timeToMinutes(booking.end_time);
+
       if (bStart > cursor) {
-        result.push({ start: minToTime(cursor), end: minToTime(bStart), available: true });
+        result.push({
+          start: minutesToTime(cursor),
+          end:   minutesToTime(bStart),
+          available: true
+        });
       }
-      result.push({ start: b.start_time, end: b.end_time, available: false });
+      result.push({
+        start: booking.start_time,
+        end:   booking.end_time,
+        available: false
+      });
       cursor = bEnd;
     });
 
-    if (cursor < schEnd) {
-      result.push({ start: minToTime(cursor), end: minToTime(schEnd), available: true });
+    if (cursor < scheduleEnd) {
+      result.push({
+        start: minutesToTime(cursor),
+        end:   minutesToTime(scheduleEnd),
+        available: true
+      });
     }
   });
 
