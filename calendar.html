@@ -549,17 +549,16 @@ function getAvailableSlots(schedules, bookings) {
   const result = [];
 
   schedules.forEach(schedule => {
-    // 用 !== undefined 而不是 !value，避免 00:00 被跳過
     const startStr = schedule.start_time;
     const endStr   = schedule.end_time;
     if (startStr === undefined || startStr === null || startStr === '') return;
 
-    const scheduleStart = timeToMinutes(startStr);
-    const scheduleEnd   = timeToMinutes(endStr);
+    const scheduleStart = timeToMin(startStr);  // ← 改這裡
+    const scheduleEnd   = timeToMin(endStr);    // ← 改這裡
 
     const overlapping = bookings.filter(b => {
-      const bStart = timeToMinutes(b.start_time);
-      const bEnd   = timeToMinutes(b.end_time);
+      const bStart = timeToMin(b.start_time);  // ← 改這裡
+      const bEnd   = timeToMin(b.end_time);    // ← 改這裡
       return bStart < scheduleEnd && bEnd > scheduleStart;
     });
 
@@ -568,17 +567,17 @@ function getAvailableSlots(schedules, bookings) {
       return;
     }
 
-    overlapping.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+    overlapping.sort((a, b) => timeToMin(a.start_time) - timeToMin(b.start_time));  // ← 改這裡
 
     let cursor = scheduleStart;
     overlapping.forEach(booking => {
-      const bStart = timeToMinutes(booking.start_time);
-      const bEnd   = timeToMinutes(booking.end_time);
+      const bStart = timeToMin(booking.start_time);  // ← 改這裡
+      const bEnd   = timeToMin(booking.end_time);    // ← 改這裡
 
       if (bStart > cursor) {
         result.push({
-          start: minutesToTime(cursor),
-          end:   minutesToTime(bStart),
+          start: minToTime(cursor),   // ← 改這裡
+          end:   minToTime(bStart),   // ← 改這裡
           available: true
         });
       }
@@ -592,8 +591,8 @@ function getAvailableSlots(schedules, bookings) {
 
     if (cursor < scheduleEnd) {
       result.push({
-        start: minutesToTime(cursor),
-        end:   minutesToTime(scheduleEnd),
+        start: minToTime(cursor),      // ← 改這裡
+        end:   minToTime(scheduleEnd), // ← 改這裡
         available: true
       });
     }
