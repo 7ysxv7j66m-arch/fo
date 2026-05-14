@@ -6,6 +6,19 @@
 <title>預約行事曆</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  .slot-note {
+  font-size: 10px;
+  color: #9A8E82;
+  margin-top: 3px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+.slot-note-toggle {
+  color: #7AAE7A;
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 10px;
+}
   @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -490,21 +503,47 @@ function renderCalendar(schedules, bookings) {
     else               cls += ' no-slot';
 
     const numHtml  = `<div class="day-num">${d}</div>`;
-    const slotsHtml = slots.length
-      ? `<div class="slot-list">` +
-        slots.map(s =>
-          `<div class="slot-tag ${s.available ? '' : 'booked'}">${s.start}–${s.end}</div>`
-        ).join('') +
-        `</div>`
-      : '';
+    // 取得這天的備註（從第一個空檔取）
+const dayNote    = (scheduleMap[ds] && scheduleMap[ds][0] && scheduleMap[ds][0].note) || '';
+const shortNote  = dayNote.length > 10 ? dayNote.substring(0, 10) : dayNote;
+const hasMoreNote = dayNote.length > 10;
 
+const noteHtml = dayNote
+  ? '<div class="slot-note">' +
+    (hasMoreNote
+      ? '<span class="slot-note-short">' + shortNote + '…</span>' +
+        '<span class="slot-note-full" style="display:none">' + dayNote + '</span>' +
+        '<span class="slot-note-toggle">展開</span>'
+      : dayNote) +
+    '</div>'
+  : '';
+
+const slotsHtml = slots.length
+  ? '<div class="slot-list">' +
+    slots.map(s =>
+      '<div class="slot-tag ' + (s.available ? '' : 'booked') + '">' + s.start + '–' + s.end + '</div>'
+    ).join('') +
+    noteHtml +
+    '</div>'
+  : '';
     const el = document.createElement('div');
     el.className = cls;
     el.innerHTML = numHtml + slotsHtml;
     grid.appendChild(el);
   }
 }
-
+// 備註展開
+document.getElementById('daysGrid').addEventListener('click', function(e) {
+  if (e.target.classList.contains('slot-note-toggle')) {
+    const toggle = e.target;
+    const short  = toggle.parentElement.querySelector('.slot-note-short');
+    const full   = toggle.parentElement.querySelector('.slot-note-full');
+    const isExpanded = full.style.display !== 'none';
+    if (short) short.style.display = isExpanded ? 'inline' : 'none';
+    if (full)  full.style.display  = isExpanded ? 'none'   : 'inline';
+    toggle.textContent = isExpanded ? '展開' : '收起';
+  }
+});
 // 把空檔區間切割掉已預約時段，產生顯示用的 slots
 function getAvailableSlots(schedules, bookings) {
   const result = [];
