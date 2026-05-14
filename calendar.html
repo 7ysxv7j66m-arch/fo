@@ -488,7 +488,7 @@ function renderCalendar(schedules, bookings) {
     const isPast  = ds < todayStr;
 
     // 當天的空檔區間
-    const daySchedules = (!isPast && scheduleMap[ds]) ? scheduleMap[ds] : [];
+    const daySchedules = scheduleMap[ds] || [];
     // 當天的預約
     const dayBookings  = bookingMap[ds] || [];
 
