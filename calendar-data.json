@@ -2,22 +2,6 @@
   "2026-05": {
     "schedules": [
       {
-        "schedule_id": "SCHMPCT2GORTJQ",
-        "date": "2026-05-19",
-        "start_time": "10:00",
-        "end_time": "18:00",
-        "note": "",
-        "created_at": "2026-05-19T15:46:26.561Z"
-      },
-      {
-        "schedule_id": "SCHMPCT2LP7HUU",
-        "date": "2026-05-20",
-        "start_time": "10:00",
-        "end_time": "18:00",
-        "note": "",
-        "created_at": "2026-05-19T15:46:33.053Z"
-      },
-      {
         "schedule_id": "SCHMPCT2J5HPVL",
         "date": "2026-05-26",
         "start_time": "10:00",
