@@ -2,14 +2,6 @@
   "2026-05": {
     "schedules": [
       {
-        "schedule_id": "SCHMPCT8BAABS4",
-        "date": "2026-05-19",
-        "start_time": "10:00",
-        "end_time": "18:00",
-        "note": "",
-        "created_at": "2026-05-19T15:50:59.488Z"
-      },
-      {
         "schedule_id": "SCHMPCT8BQ3VWN",
         "date": "2026-05-26",
         "start_time": "10:00",
