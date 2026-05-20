@@ -18,7 +18,20 @@
         "created_at": "2026-05-19T15:51:00.052Z"
       }
     ],
-    "bookings": []
+    "bookings": [
+      {
+        "booking_id": "BMPE6TFWFQ85",
+        "customer_id": "CMPCSHK5MTPG",
+        "service_id": "SMPCQZA0OTL6",
+        "date": "2026-05-28",
+        "start_time": "10:00",
+        "end_time": "12:00",
+        "amount": 800,
+        "status": "已確認",
+        "note": "",
+        "created_at": "2026-05-20T14:59:06.422Z"
+      }
+    ]
   },
   "2026-06": {
     "schedules": [],
