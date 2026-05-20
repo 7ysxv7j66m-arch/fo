@@ -1,6 +1,23 @@
 {
   "2026-05": {
-    "schedules": [],
+    "schedules": [
+      {
+        "schedule_id": "SCHMPE7H981PGD",
+        "date": "2026-05-20",
+        "start_time": "10:00",
+        "end_time": "18:00",
+        "note": "備註",
+        "created_at": "2026-05-20T15:17:38.136Z"
+      },
+      {
+        "schedule_id": "SCHMPE7HAJFV5P",
+        "date": "2026-05-27",
+        "start_time": "10:00",
+        "end_time": "18:00",
+        "note": "備註",
+        "created_at": "2026-05-20T15:17:39.245Z"
+      }
+    ],
     "bookings": []
   },
   "2026-06": {
